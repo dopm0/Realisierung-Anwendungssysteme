@@ -1,0 +1,23 @@
+version: "3"
+
+services:
+  devcontainer:
+    build: .
+    volumes:
+      - ../..:/workspaces:cached
+    network_mode: service:structurizr
+    environment:
+      - STRUCTURIZR_URL=https://${CODESPACE_NAME}-8080.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}/
+    command: "sleep infinity"
+
+  structurizr:
+    #image: structurizr/lite
+    build: structurizr
+    container_name: structurizr-lite
+    environment:
+      - FWD_URL=https://${CODESPACE_NAME}-8080.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}/
+      - STRUCTURIZR_URL=https://${CODESPACE_NAME}-8080.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}/
+    ports: 
+     - 8080:8080
+    volumes:
+      - ../diagrams:/usr/local/structurizr

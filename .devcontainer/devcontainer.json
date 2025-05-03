@@ -1,0 +1,21 @@
+{
+	"name": "Custom Devcontainer for mw211",
+
+	"features": {
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+	},
+	"runArgs": ["--init"],
+	"forwardPorts": [8080],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"systemticks.c4-dsl-extension",
+				"jebbs.plantuml"
+			]
+		}
+	},
+	"dockerComposeFile": ["docker-compose.yml"],
+	"service": "devcontainer",
+	"runServices": ["structurizr"],
+	"remoteUser": "vscode"
+}
