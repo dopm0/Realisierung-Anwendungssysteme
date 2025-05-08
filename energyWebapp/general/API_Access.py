@@ -113,5 +113,5 @@ print(f"🕒 Aggregation:   {aggregation}\n")
 print(df.tail(100))
 print(f"\n✅ Erfolgreich geladen: {len(df)} Stundenwerte von {df.index.min()} bis {df.index.max()}")
 
-# === Optional speichern ===
-# df.to_csv("strompreise_mit_meta.csv")
+# === speichern ===
+df.to_csv("preise.csv")
