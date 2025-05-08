@@ -9,11 +9,13 @@ from zipfile import ZipFile
 FILTER_ID = 4169        # Day-Ahead-Marktpreis Deutschland/Luxemburg
 REGION = "DE"
 RESOLUTION = "quarterhour"
+ZEITRAUM = 365
+ZUKUNFT = 1
 
 # Zeitraum: letztes Jahr
 #end_date = datetime.now()
-end_date = datetime.now() + timedelta(days=1)
-start_date = end_date - timedelta(days=365)
+end_date = datetime.now() + timedelta(days=ZUKUNFT)
+start_date = end_date - timedelta(days=ZEITRAUM)
 start_ts = int(start_date.timestamp() * 1000)
 end_ts = int(end_date.timestamp() * 1000)
 
