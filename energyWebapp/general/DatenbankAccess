@@ -1,0 +1,20 @@
+pip install sqlalchemy psycopg2-binary
+from sqlalchemy import create_engine
+
+# === KONFIGURATION ===
+DB_USER = 'dein_user'
+DB_PASS = 'dein_passwort'
+DB_HOST = 'localhost'
+DB_PORT = '....'
+DB_NAME = 'stromdaten'
+TABLE_NAME = 'day_ahead_preise'
+
+# === Datenbankverbindung aufbauen ===
+db_url = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+engine = create_engine(db_url)
+
+# === DataFrame in Datenbank schreiben ===
+# Wenn Tabelle existiert: 'replace', 'append' oder 'fail'
+df.to_sql(TABLE_NAME, engine, if_exists='append', index=True)
+
+print(f"✅ Daten erfolgreich in Tabelle '{TABLE_NAME}' in Datenbank '{DB_NAME}' geschrieben.")
