@@ -12,7 +12,7 @@ RESOLUTION = "quarterhour"
 ZEITRAUM = 365
 ZUKUNFT = 1
 
-# Zeitraum: letztes Jahr
+# Zeitraum: 
 #end_date = datetime.now()
 end_date = datetime.now() + timedelta(days=ZUKUNFT)
 start_date = end_date - timedelta(days=ZEITRAUM)
