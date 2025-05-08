@@ -1,21 +1,35 @@
-pip install sqlalchemy psycopg2-binary
+# ===== Installation (Shell) =====
+# pip install sqlalchemy psycopg2-binary pandas
+
+# ===== Python-Script =====
+import pandas as pd
 from sqlalchemy import create_engine
 
-# === KONFIGURATION ===
-DB_USER = 'master2025'
-DB_PASS = 'anwendungssysteme'
-DB_HOST = 'localhost'
-DB_PORT = '5432'
-DB_NAME = 'stromdaten'
-TABLE_NAME = 'day_ahead_preise'
+# --- Konfiguration ---
+DB_USER   = "master2025"
+DB_PASS   = "anwendungssysteme"
+DB_HOST   = "dopmo.duckdns.org"    
+DB_PORT   = "5432"
+DB_NAME   = "stromdaten"
+TABLE_NAME = "day_ahead_preise"
 
-# === Datenbankverbindung aufbauen === 
-# db_url = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-db_url = f"dopmo.duckdns.org://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-engine = create_engine(db_url)
+# --- DataFrame vorbereiten ---
+df = pd.read_csv("preise.csv")     
 
-# === DataFrame in Datenbank schreiben ===
-# Wenn Tabelle existiert: 'replace', 'append' oder 'fail'
-df.to_sql(TABLE_NAME, engine, if_exists='append', index=True)
+# --- Engine erstellen ---
+db_url = (
+    f"postgresql+psycopg2://{DB_USER}:{DB_PASS}"
+    f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
+engine = create_engine(db_url, echo=False, future=True)   # future=True für SQLAlchemy ≥ 2.0
 
-print(f"✅ Daten erfolgreich in Tabelle '{TABLE_NAME}' in Datenbank '{DB_NAME}' geschrieben.")
+# --- Schreiben ---
+df.to_sql(
+    TABLE_NAME,
+    engine,
+    if_exists="append",   # 'replace' oder 'fail' je nach Bedarf
+    index=False,
+    method="multi",       # effizienter Bulk-Insert
+)
+
+print(f"✅ Daten in '{TABLE_NAME}' von DB '{DB_NAME}' gespeichert.")
