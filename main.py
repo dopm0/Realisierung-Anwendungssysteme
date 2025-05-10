@@ -1,7 +1,7 @@
 from flask import Flask
 from energyWebapp.apps.baseApp.routes import base
-from energyWebapp.apps.baseApp.routes import history
-from energyWebapp.apps.baseApp.routes import battery
+from energyWebapp.apps.historyApp.routes import history
+from energyWebapp.apps.batteryApp.routes import battery
 
 def create_app():
     appl = Flask(__name__, static_folder='Apps/baseApp/static', static_url_path='/base')
