@@ -34,4 +34,4 @@ def account_view():
 #                        REST-API Routen
 # -------------------------------------------------------------------
 
-# Werdeb noch implementiert, speziell Login, Register usw. außer das wird über js gemacht
+# Werden noch implementiert, speziell Login, Register usw. außer das wird über js gemacht
