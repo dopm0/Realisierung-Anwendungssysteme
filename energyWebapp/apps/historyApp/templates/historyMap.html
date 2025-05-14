@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Strompreisentwicklung {% endblock %}
+
+{% block content %}
+  <h2>Strompreisentwicklung</h2>
+  <p> Die Strompreise werden grob in 2 unterschiedliche Preise unterteil zum einen die Day ahead preise welche 
+sich aufgrund von vorangegebenem angebot und nachfrage des nächsten tages zusammensetzen um ein 
+stabiels stromnetz zu generieren und dem intraday preis, welches aus dem in einem jeweiligen moment 
+existierenden angebot und nachfrage entsteht, oft korelieren diese beiden preise stark miteinander, die 
+preise die man am ende beim stromanbieter zahlt sind meist fest, der anbieter erwirbt sie aber zum 
+jeweiligen preis am markt und alles darüber wird anbieterseitig zu gewinn.
+
+Mit diesem tool und der grafischen darstellung kannst du dir die entwicklung unterschiedlicher zeiträume 
+genau anschauen falls es dich interessiert.</p>
+{% endblock %}

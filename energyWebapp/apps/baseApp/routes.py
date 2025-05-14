@@ -8,7 +8,7 @@ base = Blueprint('base', __name__, template_folder='templates')
 # Home Redirect
 @base.route('/', methods=['GET'])
 def index():
-    return redirect(url_for('base.home_view'))
+    return redirect(url_for('base.login_view1'))
 
 # Home Ansicht
 @base.route('/home', methods=['GET'])
@@ -20,15 +20,24 @@ def home_view():
 def login_view1():
     return render_template('login.html')
 
-# Register Ansicht
-@base.route('/register', methods=['GET'])
+# Registrieren Ansicht
+@base.route('/registrieren', methods=['GET'])
 def register_view():
-    return render_template('register.html')
+    return render_template('registrieren.html')
 
-# Account Ansicht
-@base.route('/register', methods=['GET'])
-def account_view():
-    return render_template('account.html')
+@base.route('/konto', methods=['GET'])
+def konto_view():
+    return render_template('konto.html')
+
+# Register Ansicht
+# @base.route('/register', methods=['GET'])
+# def register_view():
+#     return render_template('register.html')
+
+# # Account Ansicht
+# @base.route('/register', methods=['GET'])
+# def account_view():
+#     return render_template('account.html')
 
 # -------------------------------------------------------------------
 #                        REST-API Routen

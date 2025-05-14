@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Konto{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2>Nutzerdaten</h2>
+
+  <div class="mb-3">
+    <label class="form-label"><strong>Benutzername:</strong></label>
+    <input type="text" class="form-control" value="Max Mustermann" disabled>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label"><strong>E-Mail:</strong></label>
+    <input type="email" class="form-control" value="max.mustermann@mail.de" disabled>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label"><strong>Kennwort:</strong></label>
+    <input type="password" class="form-control" value="********" disabled>
+    <div class="form-text"><a href="#">Kennwort ändern</a></div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label"><strong>Stromverbrauch:</strong></label>
+    <input type="text" class="form-control" value="1.500 kWh" disabled>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label"><strong>Stromkosten:</strong></label>
+    <input type="text" class="form-control" value="32,45 Cent" disabled>
+  </div>
+
+</div>
+{% endblock %}

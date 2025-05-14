@@ -8,7 +8,13 @@ history = Blueprint('history', __name__, template_folder='templates', static_url
 # Home Ansicht
 @history.route('/history', methods=['GET'])
 def history_view():
-    return render_template('history.html')
+    verbrauch= 3500
+    strompreis = 0.35
+    return render_template('history.html', verbrauch=verbrauch, strompreis=strompreis)
+
+@history.route('/historyMap', methods=['GET'])
+def historyMap_view():
+    return render_template('historyMap.html')
 # -------------------------------------------------------------------
 #                        REST-API Routen
 # -------------------------------------------------------------------
