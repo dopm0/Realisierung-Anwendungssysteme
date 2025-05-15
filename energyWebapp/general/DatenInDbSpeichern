@@ -13,6 +13,19 @@ RESOLUTION = "quarterhour"
 ZEITRAUM = 365
 ZUKUNFT = 1
 
+# === Verbindung zur Datenbank ===
+DB_USER = "master2025"
+DB_PASS = "anwendungssysteme"
+DB_HOST = "db.kaidro.de"
+DB_HOSTADDR = "2a02:810c:4c8a:7800:2225:64ff:fe88:2c48"
+DB_PORT = "5432"
+DB_NAME = "postgres"
+DB_SCHEMA = "mw212_projekt"
+TABLE_NAME = "day_ahead_preise"
+
+
+
+
 # === Zeitraum berechnen ===
 end_date = datetime.now() + timedelta(days=ZUKUNFT)
 start_date = end_date - timedelta(days=ZEITRAUM)
@@ -80,24 +93,22 @@ df.set_index("timestamp", inplace=True)
 df["Unit"] = unit
 df["aggregation"] = aggregation
 df["Source"] = "Smard.de"
-df["prediction"] = df.index > datetime.now()
+#df["prediction"] = df.index > datetime.now()
+print(df)
 
-# === 4. Verbindung zur Datenbank ===
-DB_USER = "master2025"
-DB_PASS = "anwendungssysteme"
-DB_HOST = "dopmo.duckdns.org"
-DB_PORT = "5432"
-DB_NAME = "stromdaten"
-TABLE_NAME = "day_ahead_preise"
+#-----
+DB_HOSTADDR = "2a02:810c:4c8a:7800:2225:64ff:fe88:2c48"
 
 db_url = (
     f"postgresql+psycopg2://{DB_USER}:{DB_PASS}"
-    f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    f"@/{DB_NAME}"
+    f"?host={DB_HOST}"
+    f"&hostaddr={DB_HOSTADDR}"
 )
 engine = create_engine(db_url, echo=False, future=True)
 
 # === 5. Datenbank-Zeitstempel holen ===
-existing_df = pd.read_sql(f"SELECT DISTINCT timestamp FROM {TABLE_NAME}", engine)
+existing_df = pd.read_sql(f"SELECT DISTINCT timestamp FROM {DB_SCHEMA}.{TABLE_NAME}", engine)
 existing_timestamps = pd.to_datetime(existing_df["timestamp"])
 
 # === 6. Nur fehlende Zeitstempel einfügen ===
@@ -107,6 +118,7 @@ if not df_new.empty:
     df_new.to_sql(
         TABLE_NAME,
         engine,
+        schema= DB_SCHEMA,
         if_exists="append",
         index=True,
         method="multi",
