@@ -8,7 +8,7 @@ base = Blueprint('base', __name__, template_folder='templates')
 # Home Redirect
 @base.route('/', methods=['GET'])
 def index():
-    return redirect(url_for('base.login_view1'))
+    return redirect(url_for('base.home_view'))
 
 # Home Ansicht
 @base.route('/home', methods=['GET'])
