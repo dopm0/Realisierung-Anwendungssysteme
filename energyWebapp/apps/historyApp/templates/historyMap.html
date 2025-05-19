@@ -13,4 +13,41 @@ jeweiligen preis am markt und alles darüber wird anbieterseitig zu gewinn.
 
 Mit diesem tool und der grafischen darstellung kannst du dir die entwicklung unterschiedlicher zeiträume 
 genau anschauen falls es dich interessiert.</p>
+
+<div class="chart">
+  <canvas id="myChart" width="200" height="100"></canvas>
+  <script>
+  var ctx = document.getElementById('myChart').getContext('2d');
+  var myChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+          labels: [],  // HIER WERDEN DIE ZEITPUNKTE(ALLE 15 MINUTEN)
+          datasets: [{
+              label: 'Strompreis pro KWh',
+              data: [], // HIER WERDEN DIE PREISE AUS DER DATENBANK REINGELADEN
+              borderColor: 'rgba(119, 163, 69)',
+              borderWidth: 1.5,
+              pointRadius: 0
+          }]
+      },
+      options: {
+          scales: {
+              x: {
+                  title: {
+                      display: true,
+                      text: 'Zeitpunkt'
+                  }
+              },
+              y: {
+                  title: {
+                      display: true,
+                      text: 'Preis in Euro'
+                  },
+                  beginAtZero: true
+              }
+          },
+      }
+  });
+  </script>
+</div>
 {% endblock %}
