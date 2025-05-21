@@ -1,0 +1,50 @@
+import psycopg2
+import psycopg2.extras
+
+# === Verbindung zur Datenbank ===
+DB_USER = "master2025"
+DB_PASS = "anwendungssysteme"
+DB_HOST = "db.kaidro.de"
+DB_PORT = "5432"
+DB_NAME = "postgres"
+DB_SCHEMA = "mw212_projekt"
+TABLE_NAME = "Electricity_Cost"
+
+def get_user_data(user_id):
+    try:
+        # Verbindung zur Datenbank herstellen
+        conn = psycopg2.connect(
+            dbname=DB_NAME,
+            user=DB_USER,
+            password=DB_PASS,
+            host=DB_HOST,
+            port=DB_PORT
+        )
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        # Schema setzen
+        cursor.execute(f"SET search_path TO {DB_SCHEMA};")
+
+        # Abfrage ausführen
+        query = f"SELECT * FROM {TABLE_NAME} WHERE user_id = %s;"
+        cursor.execute(query, (user_id,))
+
+        # Ergebnisse holen
+        records = cursor.fetchall()
+
+        # Umwandeln in Liste von Dictionaries
+        results = [dict(row) for row in records]
+
+        # Verbindung schließen
+        cursor.close()
+        conn.close()
+
+        return results
+
+    except Exception as e:
+        print("Fehler beim Abrufen der Daten:", e)
+        return []
+
+# Beispielaufruf
+# daten = get_user_data(1234)
+# print(daten)
