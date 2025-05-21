@@ -1,0 +1,62 @@
+import psycopg2
+
+# === Verbindung zur Datenbank ===
+DB_USER = "master2025"
+DB_PASS = "anwendungssysteme"
+DB_HOST = "db.kaidro.de"
+DB_PORT = "5432"
+DB_NAME = "postgres"
+DB_SCHEMA = "mw212_projekt"
+TABLE_NAME = "Electricity_Cost"
+
+def insert_cost_data(data):
+    try:
+        # Verbindung zur Datenbank aufbauen
+        conn = psycopg2.connect(
+            dbname=DB_NAME,
+            user=DB_USER,
+            password=DB_PASS,
+            host=DB_HOST,
+            port=DB_PORT
+        )
+        cursor = conn.cursor()
+
+        # Schema setzen
+        cursor.execute(f"SET search_path TO {DB_SCHEMA};")
+
+        # SQL INSERT
+        insert_query = f"""
+            INSERT INTO {TABLE_NAME} (
+                user_id,
+                electricity_price_user,
+                electricity_consumption_user,
+                electricity_cost_user,
+                lowest_price_last_year,
+                electricity_cost_optimized,
+                savings
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s);
+        """
+
+        values = (
+            data["user_id"],
+            data["electricity_price_user"],
+            data["electricity_consumption_user"],
+            data["electricity_cost_user"],
+            data["lowest_price_last_year"],
+            data["electricity_cost_optimized"],
+            data["savings"]
+        )
+
+        cursor.execute(insert_query, values)
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+        print("Datensatz erfolgreich eingefügt.")
+
+    except Exception as e:
+        print("Fehler beim Einfügen des Datensatzes:", e)
+
+# Beispiel-Nutzung:
+# result = calculate_optimized_cost(1234, 0.35, 1200)
+# insert_cost_data(result)
