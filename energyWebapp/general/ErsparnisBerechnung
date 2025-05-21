@@ -1,0 +1,34 @@
+def calculate_optimized_cost(user_id, electricity_price_user, electricity_consumption_user):
+    try:
+        # Stromkosten mit aktuellem Preis
+        electricity_cost_user = electricity_price_user * electricity_consumption_user
+
+        # Niedrigsten Preis aus dem letzten Jahr holen
+        lowest_price = get_lowest_price_last_year()
+        if lowest_price is None:
+            raise ValueError("Niedrigster Preis konnte nicht ermittelt werden.")
+
+        # Optimierte Stromkosten
+        electricity_cost_optimized = lowest_price * electricity_consumption_user
+
+        # Ersparnis berechnen
+        savings = electricity_cost_user - electricity_cost_optimized
+
+        # Ergebnisse zurückgeben
+        return {
+            "user_id": user_id,
+            "electricity_price_user": electricity_price_user,
+            "electricity_consumption_user": electricity_consumption_user,
+            "electricity_cost_user": electricity_cost_user,
+            "lowest_price_last_year": lowest_price,
+            "electricity_cost_optimized": electricity_cost_optimized,
+            "savings": savings
+        }
+
+    except Exception as e:
+        print("Fehler bei der Berechnung:", e)
+        return None
+
+# Beispielaufruf (vorausgesetzt, get_lowest_price_last_year ist definiert)
+# result = calculate_optimized_cost(1234, 0.35, 1200)
+# print(result)
