@@ -1,0 +1,54 @@
+import psycopg2
+from datetime import datetime, timedelta
+
+# === Verbindung zur Datenbank ===
+DB_USER = "master2025"
+DB_PASS = "anwendungssysteme"
+DB_HOST = "db.kaidro.de"
+DB_PORT = "5432"
+DB_NAME = "postgres"
+DB_SCHEMA = "mw212_projekt"
+PRICE_TABLE = "electricity_price_History"
+
+def get_lowest_price_last_year():
+    try:
+        # Datum heute und vor einem Jahr berechnen
+        today = datetime.today()
+        one_year_ago = today - timedelta(days=365)
+
+        # Verbindung zur Datenbank aufbauen
+        conn = psycopg2.connect(
+            dbname=DB_NAME,
+            user=DB_USER,
+            password=DB_PASS,
+            host=DB_HOST,
+            port=DB_PORT
+        )
+        cursor = conn.cursor()
+
+        # Schema setzen
+        cursor.execute(f"SET search_path TO {DB_SCHEMA};")
+
+        # SQL-Abfrage: Preise im Zeitraum abrufen
+        query = f"""
+            SELECT MIN("Price")
+            FROM {PRICE_TABLE}
+            WHERE "Date" BETWEEN %s AND %s;
+        """
+        cursor.execute(query, (one_year_ago, today))
+
+        # Ergebnis holen
+        lowest_price = cursor.fetchone()[0]
+
+        # Verbindung schließen
+        cursor.close()
+        conn.close()
+
+        return lowest_price
+
+    except Exception as e:
+        print("Fehler beim Abrufen des niedrigsten Preises:", e)
+        return None
+
+# Beispielaufruf
+# print(get_lowest_price_last_year())
