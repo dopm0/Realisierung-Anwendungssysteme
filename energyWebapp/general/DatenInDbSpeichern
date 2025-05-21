@@ -21,7 +21,7 @@ DB_HOSTADDR = "2a02:810c:4c8a:7800:2225:64ff:fe88:2c48"
 DB_PORT = "5432"
 DB_NAME = "postgres"
 DB_SCHEMA = "mw212_projekt"
-TABLE_NAME = "day_ahead_preise"
+TABLE_History = "Electricity_Price_History"
 
 
 
@@ -108,7 +108,7 @@ db_url = (
 engine = create_engine(db_url, echo=False, future=True)
 
 # === 5. Datenbank-Zeitstempel holen ===
-existing_df = pd.read_sql(f"SELECT DISTINCT timestamp FROM {DB_SCHEMA}.{TABLE_NAME}", engine)
+existing_df = pd.read_sql(f"SELECT DISTINCT timestamp FROM {DB_SCHEMA}.{TABLE_History}", engine)
 existing_timestamps = pd.to_datetime(existing_df["timestamp"])
 
 # === 6. Nur fehlende Zeitstempel einfügen ===
@@ -116,7 +116,7 @@ df_new = df[~df.index.isin(existing_timestamps)]
 
 if not df_new.empty:
     df_new.to_sql(
-        TABLE_NAME,
+        TABLE_History,
         engine,
         schema= DB_SCHEMA,
         if_exists="append",
