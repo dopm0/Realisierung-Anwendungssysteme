@@ -62,6 +62,7 @@ async def calculate_optimized_cost(user_id, electricity_price_user, electricity_
         electricity_cost_optimized = (lowest_price_kwh + 0.12) * electricity_consumption_user 
         savings = electricity_cost_user - electricity_cost_optimized
 
+        battery = electricity_consumption_user / 365
         return {
             "user_id": user_id,
             "electricity_price_user": electricity_price_user,
@@ -69,7 +70,8 @@ async def calculate_optimized_cost(user_id, electricity_price_user, electricity_
             "electricity_cost_user": electricity_cost_user,
             "lowest_price_last_year": lowest_price_kwh,
             "electricity_cost_optimized": electricity_cost_optimized,
-            "savings": savings
+            "savings": savings,
+            "battery_size": battery
         }
 
     except Exception as e:
