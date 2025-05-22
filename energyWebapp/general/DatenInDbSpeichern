@@ -1,128 +1,127 @@
+import asyncio
+import asyncpg
 import requests
 import pandas as pd
-from sqlalchemy import create_engine
 from datetime import datetime, timedelta
 import json
 from zipfile import ZipFile
 from io import BytesIO
 
 # === KONFIGURATION ===
-FILTER_ID = 4169        # Day-Ahead-Marktpreis Deutschland/Luxemburg
+FILTER_ID = 4169
 REGION = "DE"
 RESOLUTION = "quarterhour"
 ZEITRAUM = 365
 ZUKUNFT = 1
 
-# === Verbindung zur Datenbank ===
 DB_USER = "master2025"
 DB_PASS = "anwendungssysteme"
 DB_HOST = "db.kaidro.de"
-DB_HOSTADDR = "2a02:810c:4c8a:7800:2225:64ff:fe88:2c48"
 DB_PORT = "5432"
 DB_NAME = "postgres"
 DB_SCHEMA = "mw212_projekt"
-TABLE_History = "Electricity_Price_History"
+TABLE_NAME = "Electricity_Price_History"
 
 
+async def main():
+    # Zeitraum berechnen
+    end_date = datetime.now() + timedelta(days=ZUKUNFT)
+    start_date = end_date - timedelta(days=ZEITRAUM)
+    start_ts = int(start_date.timestamp() * 1000)
+    end_ts = int(end_date.timestamp() * 1000)
 
+    # === 1. Index laden ===
+    base_url = "https://www.smard.de/app/chart_data"
+    index_url = f"{base_url}/{FILTER_ID}/{REGION}/index_{RESOLUTION}.json"
+    response = requests.get(index_url)
+    response.raise_for_status()
 
-# === Zeitraum berechnen ===
-end_date = datetime.now() + timedelta(days=ZUKUNFT)
-start_date = end_date - timedelta(days=ZEITRAUM)
-start_ts = int(start_date.timestamp() * 1000)
-end_ts = int(end_date.timestamp() * 1000)
-
-# === BASIS-URL ===
-base_url = "https://www.smard.de/app/chart_data"
-
-# === 1. Index laden ===
-index_url = f"{base_url}/{FILTER_ID}/{REGION}/index_{RESOLUTION}.json"
-response = requests.get(index_url)
-response.raise_for_status()
-
-content = response.content
-if content[:2] == b'PK':
-    with ZipFile(BytesIO(content)) as zip_file:
-        json_filename = zip_file.namelist()[0]
-        with zip_file.open(json_filename) as f:
-            index_data = json.load(f)
-else:
-    index_data = json.loads(content.decode("utf-8"))
-
-# Zeitstempel filtern
-timestamps = sorted(int(ts) for ts in index_data.get("timestamps", index_data) if isinstance(ts, (int, float)))
-
-# Nur relevante Segmente wählen
-segment_list = [ts for ts in timestamps if start_ts <= ts <= end_ts]
-
-# === 2. Daten sammeln ===
-all_data = []
-unit = aggregation = description = None
-
-for seg_ts in segment_list:
-    data_url = f"{base_url}/{FILTER_ID}/{REGION}/{FILTER_ID}_{REGION}_{RESOLUTION}_{seg_ts}.json"
-    resp = requests.get(data_url)
-    if not resp.ok:
-        print(f"⚠️ Fehler bei Segment {seg_ts}: {resp.status_code}")
-        continue
-
-    content = resp.content
+    content = response.content
     if content[:2] == b'PK':
         with ZipFile(BytesIO(content)) as zip_file:
             json_filename = zip_file.namelist()[0]
             with zip_file.open(json_filename) as f:
-                raw_json = json.load(f)
+                index_data = json.load(f)
     else:
-        raw_json = json.loads(content.decode("utf-8"))
+        index_data = json.loads(content.decode("utf-8"))
 
-    if unit is None:
-        meta_source = raw_json.get("meta", raw_json.get("data", {}))
-        unit = meta_source.get("unit", "€/MWh")
-        aggregation = meta_source.get("aggregation", RESOLUTION)
-        description = meta_source.get("description", "Day-Ahead-Marktpreis "+REGION)
+    timestamps = sorted(int(ts) for ts in index_data.get("timestamps", index_data) if isinstance(ts, (int, float)))
+    segment_list = [ts for ts in timestamps if start_ts <= ts <= end_ts]
 
-    series = raw_json.get("series", list(raw_json.values())[0])
-    all_data.extend(series)
+    # === 2. Daten sammeln ===
+    all_data = []
+    unit = aggregation = None
 
-# === 3. DataFrame bauen ===
-df = pd.DataFrame(all_data, columns=["timestamp", "price_euro"])
-df = df[(df["timestamp"] >= start_ts) & (df["timestamp"] <= end_ts)].copy()
-df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
-df.set_index("timestamp", inplace=True)
+    for seg_ts in segment_list:
+        data_url = f"{base_url}/{FILTER_ID}/{REGION}/{FILTER_ID}_{REGION}_{RESOLUTION}_{seg_ts}.json"
+        resp = requests.get(data_url)
+        if not resp.ok:
+            print(f"⚠️ Fehler bei Segment {seg_ts}: {resp.status_code}")
+            continue
 
-df["Unit"] = unit
-df["aggregation"] = aggregation
-df["Source"] = "Smard.de"
-#df["prediction"] = df.index > datetime.now()
-print(df)
+        content = resp.content
+        if content[:2] == b'PK':
+            with ZipFile(BytesIO(content)) as zip_file:
+                json_filename = zip_file.namelist()[0]
+                with zip_file.open(json_filename) as f:
+                    raw_json = json.load(f)
+        else:
+            raw_json = json.loads(content.decode("utf-8"))
 
-#-----
-DB_HOSTADDR = "2a02:810c:4c8a:7800:2225:64ff:fe88:2c48"
+        if unit is None:
+            meta = raw_json.get("meta", raw_json.get("data", {}))
+            unit = meta.get("unit", "€/MWh")
+            aggregation = meta.get("aggregation", RESOLUTION)
 
-db_url = (
-    f"postgresql+psycopg2://{DB_USER}:{DB_PASS}"
-    f"@/{DB_NAME}"
-    f"?host={DB_HOST}"
-    f"&hostaddr={DB_HOSTADDR}"
-)
-engine = create_engine(db_url, echo=False, future=True)
+        series = raw_json.get("series", list(raw_json.values())[0])
+        all_data.extend(series)
 
-# === 5. Datenbank-Zeitstempel holen ===
-existing_df = pd.read_sql(f"SELECT DISTINCT timestamp FROM {DB_SCHEMA}.{TABLE_History}", engine)
-existing_timestamps = pd.to_datetime(existing_df["timestamp"])
+    # === 3. DataFrame vorbereiten ===
+    df = pd.DataFrame(all_data, columns=["timestamp", "price_euro"])
+    df = df[(df["timestamp"] >= start_ts) & (df["timestamp"] <= end_ts)].copy()
+    df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+    df.set_index("timestamp", inplace=True)
+    df["Unit"] = unit
+    df["aggregation"] = aggregation
+    df["Source"] = "Smard.de"
+    df.reset_index(inplace=True)
 
-# === 6. Nur fehlende Zeitstempel einfügen ===
-df_new = df[~df.index.isin(existing_timestamps)]
-
-if not df_new.empty:
-    df_new.to_sql(
-        TABLE_History,
-        engine,
-        schema= DB_SCHEMA,
-        if_exists="append",
-        index=True,
-        method="multi",
+    # === 4. Mit asyncpg verbinden ===
+    conn = await asyncpg.connect(
+        user=DB_USER,
+        password=DB_PASS,
+        database=DB_NAME,
+        host=DB_HOST,
+        port=DB_PORT
     )
-    print(f"✅ {len(df_new)} neue Zeilen gespeichert.")
-else:
-    print("🔁 Keine neuen Daten gefunden.")
+
+    await conn.execute(f"SET search_path TO {DB_SCHEMA};")
+
+    # Bestehende Timestamps abrufen
+    rows = await conn.fetch(f"SELECT timestamp FROM {TABLE_NAME};")
+    existing_timestamps = set(row["timestamp"] for row in rows)
+
+    # Nur neue Datensätze einfügen
+    new_rows = df[~df["timestamp"].isin(existing_timestamps)]
+
+    if not new_rows.empty:
+        values = [
+            (row["timestamp"], row["price_euro"], row["Unit"], row["Source"], row["aggregation"])
+            for _, row in new_rows.iterrows()
+        ]
+
+        await conn.executemany(
+            f"""
+            INSERT INTO {TABLE_NAME} (timestamp, price_euro, unit, source, aggregation)
+            VALUES ($1, $2, $3, $4, $5)
+            """,
+            values
+        )
+        print(f"✅ {len(values)} neue Zeilen gespeichert.")
+    else:
+        print("🔁 Keine neuen Daten gefunden.")
+
+    await conn.close()
+
+if __name__ == "__main__":
+    asyncio.run(main())
