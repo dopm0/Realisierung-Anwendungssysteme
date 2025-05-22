@@ -1,4 +1,6 @@
-import psycopg2
+import asyncio
+import asyncpg
+from datetime import datetime, timedelta
 
 # === Verbindung zur Datenbank ===
 DB_USER = "master2025"
@@ -7,24 +9,82 @@ DB_HOST = "db.kaidro.de"
 DB_PORT = "5432"
 DB_NAME = "postgres"
 DB_SCHEMA = "mw212_projekt"
+TABLE_HISTORY = "electricity_price_history"
 TABLE_NAME = "Electricity_Cost"
 
-def insert_cost_data(data):
+async def get_avg_daily_lowest_price_last_year():
     try:
-        # Verbindung zur Datenbank aufbauen
-        conn = psycopg2.connect(
-            dbname=DB_NAME,
+        today = datetime.today()
+        one_year_ago = today - timedelta(days=365)
+
+        conn = await asyncpg.connect(
             user=DB_USER,
             password=DB_PASS,
+            database=DB_NAME,
             host=DB_HOST,
             port=DB_PORT
         )
-        cursor = conn.cursor()
+        await conn.execute(f"SET search_path TO {DB_SCHEMA};")
 
-        # Schema setzen
-        cursor.execute(f"SET search_path TO {DB_SCHEMA};")
+        query = f"""
+            SELECT AVG(daily_min) AS avg_daily_min_price
+            FROM (
+                SELECT DATE("timestamp") AS tag, MIN("price_euro") AS daily_min
+                FROM {TABLE_HISTORY}
+                WHERE "timestamp" BETWEEN $1 AND $2
+                GROUP BY DATE("timestamp")
+            ) t;
+        """
+        result = await conn.fetchval(query, one_year_ago, today)
+        await conn.close()
 
-        # SQL INSERT
+        return float(result) if result is not None else None
+
+    except Exception as e:
+        print("Fehler beim Abrufen des durchschnittlichen Tages-Tiefstpreises:", e)
+        return None
+
+async def calculate_optimized_cost(user_id, electricity_price_user, electricity_consumption_user):
+    try:
+        electricity_cost_user = electricity_price_user * electricity_consumption_user
+
+        lowest_avg_price_mwh = await get_avg_daily_lowest_price_last_year()
+        if lowest_avg_price_mwh is None:
+            raise ValueError("Preis konnte nicht ermittelt werden.")
+
+        lowest_price_kwh = lowest_avg_price_mwh / 1000
+
+        electricity_cost_optimized = (lowest_price_kwh + 0.12) * electricity_consumption_user 
+        savings = electricity_cost_user - electricity_cost_optimized
+        battery = electricity_consumption_user / 365
+
+        return {
+            "user_id": user_id,
+            "electricity_price_user": electricity_price_user,
+            "electricity_consumption_user": electricity_consumption_user,
+            "electricity_cost_user": electricity_cost_user,
+            "lowest_price_last_year": lowest_price_kwh,
+            "electricity_cost_optimized": electricity_cost_optimized,
+            "savings": savings,
+            "battery_size": battery
+        }
+
+    except Exception as e:
+        print("Fehler bei der Berechnung:", e)
+        return None
+
+async def insert_cost_data(data):
+    try:
+        conn = await asyncpg.connect(
+            user=DB_USER,
+            password=DB_PASS,
+            database=DB_NAME,
+            host=DB_HOST,
+            port=DB_PORT
+        )
+
+        await conn.execute(f"SET search_path TO {DB_SCHEMA};")
+
         insert_query = f"""
             INSERT INTO {TABLE_NAME} (
                 user_id,
@@ -33,8 +93,9 @@ def insert_cost_data(data):
                 electricity_cost_user,
                 lowest_price_last_year,
                 electricity_cost_optimized,
-                savings
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s);
+                savings,
+                battery_size
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
         """
 
         values = (
@@ -44,19 +105,20 @@ def insert_cost_data(data):
             data["electricity_cost_user"],
             data["lowest_price_last_year"],
             data["electricity_cost_optimized"],
-            data["savings"]
+            data["savings"],
+            data["battery_size"]
         )
 
-        cursor.execute(insert_query, values)
-        conn.commit()
-
-        cursor.close()
-        conn.close()
+        await conn.execute(insert_query, *values)
+        await conn.close()
         print("Datensatz erfolgreich eingefügt.")
 
     except Exception as e:
         print("Fehler beim Einfügen des Datensatzes:", e)
 
-# Beispiel-Nutzung:
-# result = calculate_optimized_cost(1234, 0.35, 1200)
-# insert_cost_data(result)
+# Hauptprogramm korrekt eingerückt
+if __name__ == "__main__":
+    result = asyncio.run(calculate_optimized_cost(1234, 0.35, 1200))
+    print(result)
+    if result:
+        asyncio.run(insert_cost_data(result))
