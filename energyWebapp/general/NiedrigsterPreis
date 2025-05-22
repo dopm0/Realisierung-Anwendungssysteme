@@ -1,4 +1,5 @@
-import psycopg2
+import asyncio
+import asyncpg
 from datetime import datetime, timedelta
 
 # === Verbindung zur Datenbank ===
@@ -8,42 +9,34 @@ DB_HOST = "db.kaidro.de"
 DB_PORT = "5432"
 DB_NAME = "postgres"
 DB_SCHEMA = "mw212_projekt"
-TABLE_History = "electricity_price_History"
+TABLE_HISTORY = "electricity_price_history"
 
-def get_lowest_price_last_year():
+async def get_lowest_price_last_year():
     try:
-        # Datum heute und vor einem Jahr berechnen
+        # Zeitraum berechnen
         today = datetime.today()
         one_year_ago = today - timedelta(days=365)
 
-        # Verbindung zur Datenbank aufbauen
-        conn = psycopg2.connect(
-            dbname=DB_NAME,
+        # Verbindung zur Datenbank
+        conn = await asyncpg.connect(
             user=DB_USER,
             password=DB_PASS,
+            database=DB_NAME,
             host=DB_HOST,
             port=DB_PORT
         )
-        cursor = conn.cursor()
 
-        # Schema setzen
-        cursor.execute(f"SET search_path TO {DB_SCHEMA};")
+        await conn.execute(f"SET search_path TO {DB_SCHEMA};")
 
-        # SQL-Abfrage: Preise im Zeitraum abrufen
+        # Query ausführen
         query = f"""
-            SELECT MIN("Price")
-            FROM {TABLE_History}
-            WHERE "Date" BETWEEN %s AND %s;
+            SELECT MIN("price_euro")
+            FROM {TABLE_HISTORY}
+            WHERE "timestamp" BETWEEN $1 AND $2;
         """
-        cursor.execute(query, (one_year_ago, today))
+        lowest_price = await conn.fetchval(query, one_year_ago.date(), today.date())
 
-        # Ergebnis holen
-        lowest_price = cursor.fetchone()[0]
-
-        # Verbindung schließen
-        cursor.close()
-        conn.close()
-
+        await conn.close()
         return lowest_price
 
     except Exception as e:
@@ -51,4 +44,6 @@ def get_lowest_price_last_year():
         return None
 
 # Beispielaufruf
-# print(get_lowest_price_last_year())
+if __name__ == "__main__":
+    result = asyncio.run(get_lowest_price_last_year())
+    print(f"Niedrigster Preis im letzten Jahr: {result}")
