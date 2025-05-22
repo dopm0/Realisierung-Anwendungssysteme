@@ -85,7 +85,7 @@ for seg_ts in segment_list:
     all_data.extend(series)
 
 # === 3. DataFrame bauen ===
-df = pd.DataFrame(all_data, columns=["timestamp", "price"])
+df = pd.DataFrame(all_data, columns=["timestamp", "price_euro"])
 df = df[(df["timestamp"] >= start_ts) & (df["timestamp"] <= end_ts)].copy()
 df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
 df.set_index("timestamp", inplace=True)
