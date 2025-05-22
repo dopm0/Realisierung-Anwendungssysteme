@@ -1,59 +1,56 @@
 {% extends "base.html" %}
 
-{% block title %}Strompreisentwicklung{% endblock %}
+{% block title %}Strompreisentwicklung {% endblock %}
+{% block tech %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
   <h2>Strompreisentwicklung</h2>
+  <p> Die Strompreise werden grob in 2 unterschiedliche Preise unterteil zum einen die Day ahead preise welche 
+sich aufgrund von vorangegebenem angebot und nachfrage des nächsten tages zusammensetzen um ein 
+stabiels stromnetz zu generieren und dem intraday preis, welches aus dem in einem jeweiligen moment 
+existierenden angebot und nachfrage entsteht, oft korelieren diese beiden preise stark miteinander, die 
+preise die man am ende beim stromanbieter zahlt sind meist fest, der anbieter erwirbt sie aber zum 
+jeweiligen preis am markt und alles darüber wird anbieterseitig zu gewinn.
 
-  <div class="mb-3">
-    <label class="form-label">Stromverbrauch des letzten Jahres:</label>
-    <input type="text" class="form-control" id="verbrauch" value="{{ verbrauch }} kWh" disabled>
-  </div>
+Mit diesem tool und der grafischen darstellung kannst du dir die entwicklung unterschiedlicher zeiträume 
+genau anschauen falls es dich interessiert.</p>
 
-  <div class="mb-3">
-    <label class="form-label">Stromkosten pro kWh:</label>
-    <input type="text" class="form-control" id="kosten" value="{{ strompreis }} €" disabled>
-  </div>
-
-  <button class="btn btn-primary" onclick="berechne()">Berechnen</button>
-
-  <div class="mt-4" id="analyse" style="display: none;">
-    <p id="analyseText"></p>
-    <ul class="list-group">
-      <li class="list-group-item"><strong>Empfohlene Batteriegröße:</strong> <span id="batterieGroesse"></span></li>
-      <li class="list-group-item"><strong>Strompreis früher:</strong> <span id="preisAlt"></span></li>
-      <li class="list-group-item"><strong>Strompreis mit Batterie:</strong> <span id="preisNeu"></span></li>
-      <li class="list-group-item"><strong>Jährliche Ersparnis:</strong> <span id="ersparnis"></span></li>
-      <li class="list-group-item"><strong>Amortisationszeit:</strong> <span id="amortisation"></span></li>
-    </ul>
-  </div>
+<div class="chart">
+  <canvas id="myChart" width="200" height="100"></canvas>
+  <script>
+  var ctx = document.getElementById('myChart').getContext('2d');
+  var myChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+          labels: [],  // HIER WERDEN DIE ZEITPUNKTE(ALLE 15 MINUTEN)
+          datasets: [{
+              label: 'Strompreis pro KWh',
+              data: [], // HIER WERDEN DIE PREISE AUS DER DATENBANK REINGELADEN
+              borderColor: 'rgba(119, 163, 69)',
+              borderWidth: 1.5,
+              pointRadius: 0
+          }]
+      },
+      options: {
+          scales: {
+              x: {
+                  title: {
+                      display: true,
+                      text: 'Zeitpunkt'
+                  }
+              },
+              y: {
+                  title: {
+                      display: true,
+                      text: 'Preis in Euro'
+                  },
+                  beginAtZero: true
+              }
+          },
+      }
+  });
+  </script>
 </div>
-
-<script>
-  function berechne() {
-    const verbrauch = {{ verbrauch }};
-    const strompreisAlt = {{ strompreis }};
-    const batterieGroesse = 5;
-    const neuerStrompreis = strompreisAlt * 0.5;
-    const ersparnisJaehrlich = verbrauch * (strompreisAlt - neuerStrompreis);
-    const batteriePreis = batterieGroesse * 1000;
-    const amortisation = batteriePreis / ersparnisJaehrlich;
-    const durchschnittspreisProKwh = batteriePreis / (batterieGroesse * 365 * 10 / 1000);
-
-    const analyseText = `Anhand deiner Angaben haben wir berechnet, dass sich eine Batterie mit einer Größe von ${batterieGroesse} kWh am besten eignet. 
-      Deinen durchschnittlichen Strompreis könntest du damit von ${strompreisAlt.toFixed(2)} €/kWh auf ${neuerStrompreis.toFixed(2)} €/kWh reduzieren.
-      Das entspricht Ersparnissen von knapp ${ersparnisJaehrlich.toFixed(2)} €/Jahr und einer Selbstfinanzierung der Batterie nach etwa ${amortisation.toFixed(1)} Jahren. 
-      Der durchschnittliche Preis pro gespeicherter kWh liegt damit bei etwa ${durchschnittspreisProKwh.toFixed(2)} €.`
-
-    document.getElementById('analyseText').innerText = analyseText;
-    document.getElementById('batterieGroesse').innerText = `${batterieGroesse} kWh`;
-    document.getElementById('preisAlt').innerText = `${strompreisAlt.toFixed(2)} €/kWh`;
-    document.getElementById('preisNeu').innerText = `${neuerStrompreis.toFixed(2)} €/kWh`;
-    document.getElementById('ersparnis').innerText = `${ersparnisJaehrlich.toFixed(2)} € pro Jahr`;
-    document.getElementById('amortisation').innerText = `${amortisation.toFixed(1)} Jahre`;
-
-    document.getElementById('analyse').style.display = 'block';
-  }
-</script>
 {% endblock %}

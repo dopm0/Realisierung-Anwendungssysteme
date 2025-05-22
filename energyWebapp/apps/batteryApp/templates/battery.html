@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Batterie-Rechner{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2>Batterie-Rechner</h2>
+
+  <div class="mb-3">
+    <label class="form-label">Stromverbrauch des letzten Jahres:</label>
+    <input type="text" class="form-control" id="verbrauch" value="{{ verbrauch }} kWh" disabled>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Stromkosten pro kWh:</label>
+    <input type="text" class="form-control" id="kosten" value="{{ strompreis }} €" disabled>
+  </div>
+
+  <button class="btn btn-primary" onclick="berechne()">Berechnen</button>
+
+  <div class="mt-4" id="analyse" style="display: none;">
+    <p id="analyseText"></p>
+    <ul class="list-group">
+      <li class="list-group-item"><strong>Empfohlene Batteriegröße:</strong> <span id="batterieGroesse"></span></li>
+      <li class="list-group-item"><strong>Strompreis früher:</strong> <span id="preisAlt"></span></li>
+      <li class="list-group-item"><strong>Strompreis mit Batterie:</strong> <span id="preisNeu"></span></li>
+      <li class="list-group-item"><strong>Jährliche Ersparnis:</strong> <span id="ersparnis"></span></li>
+      <li class="list-group-item"><strong>Amortisationszeit:</strong> <span id="amortisation"></span></li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  function berechne() {
+    const verbrauch = {{ verbrauch }};
+    const strompreisAlt = {{ strompreis }};
+    const batterieGroesse = 5;
+    const neuerStrompreis = strompreisAlt * 0.5;
+    const ersparnisJaehrlich = verbrauch * (strompreisAlt - neuerStrompreis);
+    const batteriePreis = batterieGroesse * 1000;
+    const amortisation = batteriePreis / ersparnisJaehrlich;
+    const durchschnittspreisProKwh = batteriePreis / (batterieGroesse * 365 * 10 / 1000);
+
+    const analyseText = `Anhand deiner Angaben haben wir berechnet, dass sich eine Batterie mit einer Größe von ${batterieGroesse} kWh am besten eignet. 
+      Deinen durchschnittlichen Strompreis könntest du damit von ${strompreisAlt.toFixed(2)} €/kWh auf ${neuerStrompreis.toFixed(2)} €/kWh reduzieren.
+      Das entspricht Ersparnissen von knapp ${ersparnisJaehrlich.toFixed(2)} €/Jahr und einer Selbstfinanzierung der Batterie nach etwa ${amortisation.toFixed(1)} Jahren. 
+      Der durchschnittliche Preis pro gespeicherter kWh liegt damit bei etwa ${durchschnittspreisProKwh.toFixed(2)} €.`
+
+    document.getElementById('analyseText').innerText = analyseText;
+    document.getElementById('batterieGroesse').innerText = `${batterieGroesse} kWh`;
+    document.getElementById('preisAlt').innerText = `${strompreisAlt.toFixed(2)} €/kWh`;
+    document.getElementById('preisNeu').innerText = `${neuerStrompreis.toFixed(2)} €/kWh`;
+    document.getElementById('ersparnis').innerText = `${ersparnisJaehrlich.toFixed(2)} € pro Jahr`;
+    document.getElementById('amortisation').innerText = `${amortisation.toFixed(1)} Jahre`;
+
+    document.getElementById('analyse').style.display = 'block';
+  }
+</script>
+{% endblock %}

@@ -6,9 +6,11 @@ battery = Blueprint('battery', __name__, template_folder='templates', static_url
 #                          Web-UI Routen
 # -------------------------------------------------------------------
 # Home Ansicht
-@battery.route('/battery', methods=['GET'])
+@battery.route('/', methods=['GET'])
 def battery_view():
-    return render_template('battery.html')
+    verbrauch= 3500
+    strompreis = 0.35
+    return render_template('battery.html', verbrauch=verbrauch, strompreis=strompreis)
 # -------------------------------------------------------------------
 #                        REST-API Routen
 # -------------------------------------------------------------------
