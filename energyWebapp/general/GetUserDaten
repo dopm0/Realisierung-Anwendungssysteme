@@ -1,5 +1,5 @@
-import psycopg2
-import psycopg2.extras
+import asyncio
+import asyncpg
 
 # === Verbindung zur Datenbank ===
 DB_USER = "master2025"
@@ -10,35 +10,27 @@ DB_NAME = "postgres"
 DB_SCHEMA = "mw212_projekt"
 TABLE_NAME = "Electricity_Cost"
 
-def get_user_data(user_id):
+async def get_user_data(user_id):
     try:
         # Verbindung zur Datenbank herstellen
-        conn = psycopg2.connect(
-            dbname=DB_NAME,
+        conn = await asyncpg.connect(
             user=DB_USER,
             password=DB_PASS,
+            database=DB_NAME,
             host=DB_HOST,
             port=DB_PORT
         )
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Schema setzen
-        cursor.execute(f"SET search_path TO {DB_SCHEMA};")
+        await conn.execute(f"SET search_path TO {DB_SCHEMA};")
 
         # Abfrage ausführen
-        query = f"SELECT * FROM {TABLE_NAME} WHERE user_id = %s;"
-        cursor.execute(query, (user_id,))
+        query = f"SELECT * FROM {TABLE_NAME} WHERE user_id = $1;"
+        records = await conn.fetch(query, user_id)
 
-        # Ergebnisse holen
-        records = cursor.fetchall()
+        # Ergebnis in Liste von Dictionaries umwandeln
+        results = [dict(record) for record in records]
 
-        # Umwandeln in Liste von Dictionaries
-        results = [dict(row) for row in records]
-
-        # Verbindung schließen
-        cursor.close()
-        conn.close()
-
+        await conn.close()
         return results
 
     except Exception as e:
@@ -46,5 +38,7 @@ def get_user_data(user_id):
         return []
 
 # Beispielaufruf
-# daten = get_user_data(1234)
-# print(daten)
+if __name__ == "__main__":
+    user_id = 1234  # Beispiel-ID
+    daten = asyncio.run(get_user_data(user_id))
+    print(daten)
