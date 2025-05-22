@@ -11,7 +11,7 @@ DB_NAME = "postgres"
 DB_SCHEMA = "mw212_projekt"
 TABLE_HISTORY = "electricity_price_history"
 
-async def get_lowest_price_last_year():
+async def get_avg_daily_lowest_price_last_year():
     try:
         # Zeitraum berechnen
         today = datetime.today()
@@ -28,22 +28,26 @@ async def get_lowest_price_last_year():
 
         await conn.execute(f"SET search_path TO {DB_SCHEMA};")
 
-        # Query ausführen
+        # Query: Für jeden Tag den minimalen Preis, dann den Durchschnitt berechnen
         query = f"""
-            SELECT MIN("price_euro")
-            FROM {TABLE_HISTORY}
-            WHERE "timestamp" BETWEEN $1 AND $2;
+            SELECT AVG(daily_min) AS avg_daily_min_price
+            FROM (
+                SELECT DATE("timestamp") AS tag, MIN("price_euro") AS daily_min
+                FROM {TABLE_HISTORY}
+                WHERE "timestamp" BETWEEN $1 AND $2
+                GROUP BY DATE("timestamp")
+            ) t;
         """
-        lowest_price = await conn.fetchval(query, one_year_ago.date(), today.date())
+        avg_lowest = await conn.fetchval(query, one_year_ago, today)
 
         await conn.close()
-        return lowest_price
+        return avg_lowest
 
     except Exception as e:
-        print("Fehler beim Abrufen des niedrigsten Preises:", e)
+        print("Fehler beim Abrufen des durchschnittlichen Tages-Tiefstpreises:", e)
         return None
 
 # Beispielaufruf
 if __name__ == "__main__":
-    result = asyncio.run(get_lowest_price_last_year())
-    print(f"Niedrigster Preis im letzten Jahr: {result}")
+    result = asyncio.run(get_avg_daily_lowest_price_last_year())
+    print(f"Durchschnittlicher Tages-Tiefstpreis im letzten Jahr: {result:.5f} €/MWh" if result else "Keine Daten verfügbar.")
