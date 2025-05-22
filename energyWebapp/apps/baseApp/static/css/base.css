@@ -3,6 +3,15 @@ body {
     font-family: Arial, sans-serif;
 }
 
+button {
+    color: white;
+    background-color: #86c4c6;
+    border-radius: 3px;
+    border-color: #86c4c6;
+    border-style: dashed;
+    cursor: pointer;
+}
+
 .navbar {
     /*Positions Eigenschaften*/
     position: fixed;
@@ -66,25 +75,4 @@ body {
     margin-right: auto;
     background: #d9f7ff;
     border-radius: 15px;
-}
-
-.database {
-    padding-top: 25px;
-    padding-bottom: 25px;
-    padding-right: 25px;
-    padding-left: 25px;
-    margin-top: 1%;
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
-    background: #f5f5f5;
-    border-radius: 15px;
-}
-
-.preview {
-    height: 160px;
-}
-
-.icon {
-    height: 32px;
 }

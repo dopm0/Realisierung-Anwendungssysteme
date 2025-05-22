@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Login{% endblock %}
+{% block title %}Registrieren{% endblock %}
 
 {% block content %}
-<form method="POST" action="{{ url_for('base.login_func') }}">
+<form method="POST" action="{{ url_for('base.register_func') }}">
   <table align="center">
     <tr>
-      <td colspan="2">-----------------------------------Login-----------------------------------</td>
+      <td colspan="2">------------------------------Registrierung------------------------------</td>
     </tr>
     <tr>
       <th align="left">Benutzername: </th>
@@ -17,13 +17,13 @@
       <td><input type="password" name="password" required></td>
     </tr>
     <tr>
-      <td colspan="2" align="center"><button type="submit">Login</button></td>
+      <td colspan="2" align="center"><button type="submit">Registrieren</button></td>
     </tr>
     <tr>
       <td colspan="2">------------------------------------------------------------------------------</td>
     </tr>
     <tr>
-      <td colspan="2" align="center"><p>Noch nicht registriert? <a href="{{ url_for('base.register_view') }}">Zur Registrierung</a></p></td>
+      <td colspan="2" align="center"><p>Schon registriert? <a href="{{ url_for('base.login_view') }}">Zum Login</a></p></td>
     </tr>
   </table>
 </form>
