@@ -1,5 +1,6 @@
 from flask import Blueprint, request, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user, login_user, logout_user
+from energyWebapp.apps.baseApp.models.electricitycost import ElectricityCost
 from energyWebapp.apps.baseApp.models.user import User
 from energyWebapp.general.db.extensions import db
 
@@ -33,14 +34,12 @@ def register_view():
 @base.route('/konto', methods=['GET'])
 @login_required
 def konto_view():
-    return render_template('konto.html', user=current_user)
+    return render_template('konto.html', user=current_user, data=current_user.electricity_cost)
 
 # -------------------------------------------------------------------
 #                        REST-API Routen
 # -------------------------------------------------------------------
-
-# Werden noch implementiert, speziell Login, Register usw. außer das wird über js gemacht
-
+# Route für Anmeldung
 @base.route('/login', methods=['POST'])
 def login_func():
     username = request.form.get('username')
@@ -56,6 +55,7 @@ def login_func():
         flash('Ungültige Anmeldedaten')
         return redirect(url_for('base.login_view'))  # Zurück zur Login-Seite
     
+# Route für Abmeldung
 @base.route('/logout')
 @login_required
 def logout_func():
@@ -78,5 +78,25 @@ def register_func():
     db.session.add(new_user)
     db.session.commit()
 
+    # Zum Nutzer gehörige ElectricityCost erstellen
+    data = ElectricityCost(user_id=new_user.ID_User)
+    db.session.add(data)
+    db.session.commit()
+
     flash('Registrierung erfolgreich – bitte einloggen')
     return redirect(url_for('base.login_view'))
+
+#Route zum Speichern von Benutzerdaten
+@base.route('/userdata', methods=['POST'])
+def save_userdata():
+    consumption    = request.form.get('consumption', '').replace(',', '.')
+    price          = request.form.get('price', '').replace(',', '.')
+
+    cost_entry  = current_user.electricity_cost
+    
+    cost_entry.electricity_consumption_user = float(consumption)
+    cost_entry.electricity_price_user       = float(price)
+
+    db.session.commit()
+
+    return redirect(url_for('base.konto_view'))

@@ -3,6 +3,7 @@
 {% block title %}Strompreisentwicklung {% endblock %}
 {% block tech %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -20,37 +21,58 @@ genau anschauen falls es dich interessiert.</p>
 <div class="chart">
   <canvas id="myChart" width="200" height="100"></canvas>
   <script>
-  var ctx = document.getElementById('myChart').getContext('2d');
-  var myChart = new Chart(ctx, {
+    var ctx = document.getElementById('myChart').getContext('2d');
+    var myChart = new Chart(ctx, {
       type: 'line',
       data: {
-          labels: [],  // HIER WERDEN DIE ZEITPUNKTE(ALLE 15 MINUTEN)
-          datasets: [{
-              label: 'Strompreis pro KWh',
-              data: [], // HIER WERDEN DIE PREISE AUS DER DATENBANK REINGELADEN
-              borderColor: 'rgba(119, 163, 69)',
-              borderWidth: 1.5,
-              pointRadius: 0
-          }]
+        labels: {{ timestamps | tojson }},
+        datasets: [{
+          label: 'Strompreis pro MWh',
+          data: {{ prices | tojson }},
+          borderColor: 'rgba(119, 163, 69)',
+          borderWidth: 1.5,
+          pointRadius: 0
+        }]
       },
       options: {
-          scales: {
-              x: {
-                  title: {
-                      display: true,
-                      text: 'Zeitpunkt'
-                  }
-              },
-              y: {
-                  title: {
-                      display: true,
-                      text: 'Preis in Euro'
-                  },
-                  beginAtZero: true
-              }
+        responsive: true,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Zeitpunkt'
+            }
           },
+          y: {
+            title: {
+              display: true,
+              text: 'Preis in Euro'
+            },
+            beginAtZero: true
+          }
+        },
+        plugins: {
+          zoom: {
+            pan: {
+              enabled: true,
+              mode: 'x'
+            },
+            zoom: {
+              wheel: {
+                enabled: true
+              },
+              pinch: {
+                enabled: true
+              },
+              mode: 'x'
+            }
+          }
+        }
       }
-  });
+    });
+
   </script>
+  <button onclick="myChart.resetZoom()">Chart Zurücksetzen</button>
 </div>
+
 {% endblock %}

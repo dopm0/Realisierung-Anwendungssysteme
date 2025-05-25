@@ -11,26 +11,32 @@
     </tr>
     <tr>
       <th align="left">Benutzername: </th>
-      <td><input type="text" class="form-control" value="{{ user.Username }}" disabled></td>
-    </tr>
-    <tr>
-      <td colspan="2" align="center"><button>Kennwort ändern</button></td>
+      <td><input type="text" class="form-control" name="user" value="{{ user.Username }}" disabled></td>
     </tr>
     <tr>
       <td colspan="2">------------------------------Verbauchsdaten---------------------------------</td>
     </tr>
     <tr>
       <th align="left">Stromverbrauch: </th>
-      <td><input type="text" class="form-control" value="" disabled></td>
+      <td><input type="text" class="form-control" name="consumption" value="{% if data.electricity_consumption_user %}{{ data.electricity_consumption_user  }} {% endif %} KWh" disabled></td>
     </tr>
     <tr>
       <th align="left">Gezahlter Strompreis: </th>
-      <td><input type="text" class="form-control" value="" disabled></td>
+      <td><input type="text" class="form-control" name="price" value="{% if data.electricity_price_user %}{{ data.electricity_price_user  }} {% endif %} €" disabled></td>
     </tr>
     <tr>
-      <td colspan="2" align="center"><button> Speichern</button></td>
+      <th align="left">Empfohlene Batteriegröße: </th>
+      <td><input type="text" class="form-control" name="battery" value="{% if data.battery_size %}{{ data.battery_size  }} {% endif %} KWh" disabled></td>
     </tr>
-     <tr>
+    <tr>
+      <th align="left">Optimierter Strompreis: </th>
+      <td><input type="text" class="form-control" name="opt_price" value="{% if data.electricity_cost_optimized %}{{ "%.3f"|format(data.electricity_cost_optimized / data.electricity_consumption_user) }} {% endif %} €" disabled></td>
+    </tr>
+    <tr>
+      <th align="left">Potenzielle Jährliche Ersparnisse </th>
+      <td><input type="text" class="form-control" name="pot_savings" value="{% if data.savings %}{{ data.savings  }} {% endif %} €" disabled></td>
+    </tr>
+    <tr>
       <td colspan="2">-------------------------------------------------------------------------------------</td>
     </tr>
     <tr>
