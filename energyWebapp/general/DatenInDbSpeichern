@@ -77,7 +77,7 @@ async def main():
         all_data.extend(series)
 
     # === 3. DataFrame vorbereiten ===
-    df = pd.DataFrame(all_data, columns=["timestamp", "price_euro"])
+    df = pd.DataFrame(all_data, columns=["timestamp", "price"])
     df = df[(df["timestamp"] >= start_ts) & (df["timestamp"] <= end_ts)].copy()
     df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
     df.set_index("timestamp", inplace=True)
@@ -106,13 +106,13 @@ async def main():
 
     if not new_rows.empty:
         values = [
-            (row["timestamp"], row["price_euro"], row["Unit"], row["Source"], row["aggregation"])
+            (row["timestamp"], row["price"], row["Unit"], row["Source"], row["aggregation"])
             for _, row in new_rows.iterrows()
         ]
 
         await conn.executemany(
             f"""
-            INSERT INTO {TABLE_NAME} (timestamp, price_euro, unit, source, aggregation)
+            INSERT INTO {TABLE_NAME} (timestamp, price, unit, source, aggregation)
             VALUES ($1, $2, $3, $4, $5)
             """,
             values
