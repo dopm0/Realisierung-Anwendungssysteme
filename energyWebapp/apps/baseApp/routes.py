@@ -1,6 +1,6 @@
 from flask import Blueprint, request, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user, login_user, logout_user
-from energyWebapp.apps.baseApp.models.electricitycost import ElectricityCost
+from energyWebapp.apps.batteryApp.models.electricitycost import ElectricityCost
 from energyWebapp.apps.baseApp.models.user import User
 from energyWebapp.general.db.extensions import db
 

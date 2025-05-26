@@ -36,31 +36,3 @@ class ElectricityPriceHistory(db.Model):
         avg_daily_min = db.session.query(func.avg(daily_minima_subq.c.daily_min)).scalar()
 
         return float(avg_daily_min)
-
-    @classmethod
-    def calculate_optimized_cost(cls, electricity_price_user, electricity_consumption_user, cost_entry):
-        network_fees                = 0.12
-        lowest_avg_price_mwh        = cls.get_avg_daily_lowest_price_last_year()
-        lowest_price_kwh            = lowest_avg_price_mwh / 1000
-        electricity_cost_user       = electricity_price_user * electricity_consumption_user
-        electricity_cost_optimized  = (lowest_price_kwh + network_fees) * electricity_consumption_user
-        savings                     = electricity_cost_user - electricity_cost_optimized
-        battery                     = electricity_consumption_user / 365
-
-        cost_entry.electricity_price_user       = electricity_price_user
-        cost_entry.electricity_consumption_user = electricity_consumption_user
-        cost_entry.electricity_cost_user        = electricity_cost_user
-        cost_entry.electricity_cost_optimized   = electricity_cost_optimized
-        cost_entry.savings                      = savings
-        cost_entry.battery_size                 = battery
-
-        db.session.commit()
-
-        return {
-            "electricity_price_user": electricity_price_user,
-            "electricity_consumption_user": electricity_consumption_user,
-            "electricity_cost_user": electricity_cost_user,
-            "electricity_cost_optimized": electricity_cost_optimized,
-            "savings": savings,
-            "battery_size": battery
-        }
