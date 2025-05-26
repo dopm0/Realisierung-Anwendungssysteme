@@ -9,15 +9,15 @@ class ElectricityPriceHistory(db.Model):
 
     id_electricity_price = Column(Integer, primary_key=True, autoincrement=True)
     timestamp            = Column(TIMESTAMP(timezone=False), nullable=False)
-    price_euro           = Column(Numeric(10, 5), nullable=False)
+    price                = Column(Numeric(10, 5), nullable=False)
 
 
     @classmethod
     def get_prices(cls):
         prices      = cls.query.order_by(cls.timestamp).all()
         timestamps  = [p.timestamp.strftime('%Y-%m-%d %H:%M') for p in prices]
-        prices_euro = [float(p.price_euro) for p in prices]
-        return {"timestamps": timestamps, "prices_euro": prices_euro}
+        prices      = [float(p.price) for p in prices]
+        return {"timestamps": timestamps, "prices": prices}
 
     @classmethod
     def get_avg_daily_lowest_price_last_year(cls):
@@ -27,7 +27,7 @@ class ElectricityPriceHistory(db.Model):
         daily_minima_subq = (
             db.session.query(
                 cast(func.date(cls.timestamp), Date).label("day"),
-                func.min(cls.price_euro).label("daily_min")
+                func.min(cls.price).label("daily_min")
             )
             .filter(cls.timestamp.between(one_year_ago, today))
             .group_by(cast(func.date(cls.timestamp), Date))
