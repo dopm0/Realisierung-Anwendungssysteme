@@ -8,7 +8,7 @@ class ElectricityCost(db.Model):
     __tablename__ = 'electricity_cost'
     __table_args__ = {'schema': 'mw212_projekt'}
 
-    id = Column(Integer, primary_key=True)
+    id_electricity_cost = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('mw212_projekt.users.ID_User'), nullable=False, unique=True)
     electricity_consumption_user = db.Column(db.Numeric(10, 2))
     electricity_price_user = db.Column(db.Numeric(10, 5))
