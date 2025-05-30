@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 from energyWebapp.general.db.extensions import db
-from energyWebapp.apps.baseApp.models.electricityhistory import ElectricityPriceHistory
+from energyWebapp.apps.historyApp.models.electricityhistory import ElectricityPriceHistory
 
 
 class ElectricityCost(db.Model):
